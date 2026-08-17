@@ -1,0 +1,28 @@
+{
+  "result": "approve",
+  "apiMessage": "valid",
+  "document": {
+    "lafNo": "2026080032",
+    "docType": "Lease Approval Form",
+    "documentDate": "2026-08-14",
+    "preparedBy": "SYSTEM ADMINISTRATOR",
+    "lesseeType": "NEW LEASE",
+    "decisionDate": "2026-08-14T17:23:37",
+    "decidedBy": "MV .. TARANTINGAN",
+    "remarks": "",
+    "lesseeEntity": "PARTNERSHIP/CORPORATION",
+    "lesseeName": "OPTIGROUPMEDICAL INC. - P2-12",
+    "purpose": "",
+    "unitType": "RETAIL / COMMERCIAL",
+    "area": "133.85 sqm",
+    "termMonths": 36,
+    "contractStart": "2026-08-14",
+    "contractEnd": "2029-08-13",
+    "fileName": "Lease-Approval-Form-2026080032.pdf",
+    "pdfUrl": "https://lmsapi.eurotowersintl.com/api/laf-generate?tokenid=1&coid=01&branchid=01&lafno=2026080032",
+    "procId": "0",
+    "nextProcId": "1",
+    "nextAuthId": "MVT001",
+    "secKey": "28ba95071857148beb203296cc8f4bf86c30c54877ad541cf4733cd6f5003b13"
+  }
+}

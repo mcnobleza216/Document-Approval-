@@ -1,0 +1,4 @@
+{
+    "TRIGGER_URL": "https://lmsapi.eurotowersintl.com/api/approval-auth-trigger",
+    "APPROVAL_AUTH_URL": "https://lmsapi.eurotowersintl.com/api/approvalauth"
+}
