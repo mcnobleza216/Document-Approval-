@@ -49,26 +49,26 @@
     /* THE single API — it both records the action AND returns
        the JSON with the result + LAF document details.
        Populated from config.json at startup by loadConfig(). */
-    let TRIGGER_URL = null;
+    let TRIGGER_URL = "https://lmsapi.eurotowersintl.com/api/approval-auth-trigger";
     /* POST endpoint — called on APPROVE to pass the approval
        to the next authorizer (document.nextAuthId).
        Populated from config.json at startup by loadConfig(). */
-    let APPROVAL_AUTH_URL = null;
+    let APPROVAL_AUTH_URL = "https://lmsapi.eurotowersintl.com/api/approvalauth";
     const DOC_ID            = "LAF";   // document type code sent as DocId
     /* Fetches config.json and populates TRIGGER_URL / APPROVAL_AUTH_URL.
        Throws if the file is missing or doesn't contain both keys, so
        the caller can route to the error page instead of silently
        trying to fetch "null". */
-    async function loadConfig() {
-        const response = await fetch(CONFIG_URL);
-        if (!response.ok) throw new Error(`Failed to load config.json (${response.status})`);
-        const cfg = await response.json();
-        if (!cfg.TRIGGER_URL || !cfg.APPROVAL_AUTH_URL) {
-            throw new Error("config.json is missing TRIGGER_URL or APPROVAL_AUTH_URL.");
-        }
-        TRIGGER_URL       = cfg.TRIGGER_URL;
-        APPROVAL_AUTH_URL = cfg.APPROVAL_AUTH_URL;
-    }
+//    async function loadConfig() {
+//        const response = await fetch(CONFIG_URL);
+//        if (!response.ok) throw new Error(`Failed to load config.json (${response.status})`);
+//        const cfg = await response.json();
+//        if (!cfg.TRIGGER_URL || !cfg.APPROVAL_AUTH_URL) {
+//            throw new Error("config.json is missing TRIGGER_URL or APPROVAL_AUTH_URL.");
+//        }
+//        TRIGGER_URL       = cfg.TRIGGER_URL;
+//        APPROVAL_AUTH_URL = cfg.APPROVAL_AUTH_URL;
+//    }
     /* ── Query params from the email link ──
        ?coid=01&branchid=01&lafno=2026123123&token=1&prompt=approve */
     const params    = new URLSearchParams(window.location.search);
@@ -126,7 +126,7 @@
                 headers: { "Content-Type": "application/json" },
                 body: JSON.stringify(payload)
             });
-            if (!response.ok) {
+            if (!response.ok) { 
                 return { ok: false, message: `Request failed (${response.status})` };
             }
             const data = await response.json();
@@ -420,31 +420,49 @@
         remarksModal = new bootstrap.Modal(document.getElementById("remarksModal"));
         remarksModal.show();
     }
-    async function confirmDecision() {
+       async function confirmDecision() {
         const remarks = document.getElementById("remarksInput").value.trim();
+
         /* Remarks are REQUIRED for both Decline and Return */
         if (!remarks) {
             document.getElementById("remarksError").classList.remove("d-none");
             return;
         }
         document.getElementById("remarksError").classList.add("d-none");
+
         const btn = document.getElementById("confirmDecisionBtn");
         const originalHtml = MODAL_CONFIG[decisionMode].btnHtml;
         btn.disabled = true;
         btn.innerHTML = `<span class="spinner-border spinner-border-sm me-1"></span> Submitting…`;
-        /* Re-call the trigger API with the remarks appended */
-        const ok = await submitRemarks(remarks);
-        if (!ok) {
+
+        /* Attach the remarks to the document BEFORE posting, so
+           postApprovalAuth() picks them up in the payload. */
+        doc.remarks = remarks;
+
+        /* 1️⃣ Re-call the trigger API with the remarks appended */
+        const triggerOk = await submitRemarks(remarks);
+        if (!triggerOk) {
             btn.disabled = false;
             btn.innerHTML = originalHtml;
             alert("Failed to submit. Please check your connection and try again.");
             return;
         }
-        /* Show the result page with the user's remarks */
-        doc.status  = decisionMode;
-        doc.remarks = remarks;
+
+        /* 2️⃣ POST to approvalauth — this is what actually records
+           the reject / return on the backend. Missing before. */
+        const authResult = await postApprovalAuth(doc);
+        if (!authResult.ok) {
+            btn.disabled = false;
+            btn.innerHTML = originalHtml;
+            alert(authResult.message || "Failed to submit. Please try again.");
+            return;
+        }
+
+        /* Show the result page */
+        doc.status = decisionMode;
         remarksModal.hide();
         render(doc);
+
         btn.disabled = false;
         btn.innerHTML = originalHtml;
     }
@@ -454,13 +472,13 @@
         document.getElementById("confirmDecisionBtn")
                 .addEventListener("click", confirmDecision);
 
-        try {
-            await loadConfig();
-        } catch (error) {
-            console.error("Failed to load config:", error);
-            showError("Configuration could not be loaded. Please contact support.");
-            return;
-        }
+//        try {
+//            await loadConfig();
+//        } catch (error) {
+//            console.error("Failed to load config:", error);
+//            showError("Configuration could not be loaded. Please contact support.");
+//            return;
+//        }
         loadDocuments();
     });
 })();
